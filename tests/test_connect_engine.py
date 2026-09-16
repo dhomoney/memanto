@@ -293,6 +293,7 @@ def test_installed_skill_carries_the_agents_own_slug(tmp_path, monkeypatch):
 def setup_kimi_dirs(tmp_path, monkeypatch):
     """Kimi hooks are user-level: config.toml lands in ~/.kimi-code."""
     stub_config_manager(monkeypatch)
+    monkeypatch.delenv("KIMI_CODE_HOME", raising=False)
     home = tmp_path / "home"
     home.mkdir()
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
@@ -403,6 +404,7 @@ def test_kimi_code_merged_config_parses_as_toml(tmp_path, monkeypatch):
 
 def test_kimi_code_global_install_uses_kimi_code_home(tmp_path, monkeypatch):
     stub_config_manager(monkeypatch)
+    monkeypatch.delenv("KIMI_CODE_HOME", raising=False)
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
 
     result = engine.install_agent(
@@ -424,3 +426,34 @@ def test_kimi_code_global_install_uses_kimi_code_home(tmp_path, monkeypatch):
     assert engine.TOML_HOOK_SENTINEL not in remaining
     assert not (tmp_path / ".kimi-code" / "AGENTS.md").exists()
     assert not (tmp_path / ".kimi-code" / "skills" / "memanto").exists()
+
+
+def test_kimi_code_global_install_honors_kimi_code_home_env(tmp_path, monkeypatch):
+    """KIMI_CODE_HOME relocates the whole global root (default ~/.kimi-code)."""
+    stub_config_manager(monkeypatch)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: fake_home))
+    kimi_home = tmp_path / "custom-kimi-root"
+    monkeypatch.setenv("KIMI_CODE_HOME", str(kimi_home))
+
+    result = engine.install_agent(
+        "kimi-code", str(tmp_path / "project"), is_global=True
+    )
+
+    assert result["errors"] == []
+    assert (kimi_home / "AGENTS.md").exists()
+    assert (kimi_home / "skills" / "memanto" / "SKILL.md").exists()
+    config_path = kimi_home / "config.toml"
+    assert engine.TOML_HOOK_SENTINEL in config_path.read_text(encoding="utf-8")
+    assert not (fake_home / ".kimi-code").exists()
+
+    remove_result = engine.remove_agent(
+        "kimi-code", str(tmp_path / "project"), is_global=True
+    )
+
+    assert remove_result["errors"] == []
+    remaining = config_path.read_text(encoding="utf-8")
+    assert engine.TOML_HOOK_SENTINEL not in remaining
+    assert not (kimi_home / "AGENTS.md").exists()
+    assert not (kimi_home / "skills" / "memanto").exists()

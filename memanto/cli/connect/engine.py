@@ -494,9 +494,8 @@ def _install_hooks(agent: AgentDef, project_path: Path, is_global: bool) -> str 
         return _install_hooks_toml(agent, project_path, is_global)
 
     if is_global:
-        if agent.config_global_dir:
-            config_dir = Path.home() / agent.config_global_dir.lstrip("~/")
-        else:
+        config_dir = agent.resolve_config_global_dir()
+        if config_dir is None:
             return None
     else:
         if agent.config_local_dir:
@@ -569,9 +568,8 @@ def _remove_hooks(agent: AgentDef, project_path: Path, is_global: bool) -> str |
         return _remove_hooks_toml(agent, project_path, is_global)
 
     if is_global:
-        if agent.config_global_dir:
-            config_dir = Path.home() / agent.config_global_dir.lstrip("~/")
-        else:
+        config_dir = agent.resolve_config_global_dir()
+        if config_dir is None:
             return None
     else:
         if agent.config_local_dir:
@@ -656,9 +654,11 @@ def _toml_settings_path(agent: AgentDef) -> Path | None:
     Kimi Code has no project-level hook configuration, so hooks always land
     in the global config directory even for project installs.
     """
-    if not agent.hook_config or not agent.config_global_dir:
+    if not agent.hook_config:
         return None
-    config_dir = Path.home() / agent.config_global_dir.lstrip("~/")
+    config_dir = agent.resolve_config_global_dir()
+    if config_dir is None:
+        return None
     return config_dir / agent.hook_config.settings_file
 
 
@@ -738,9 +738,8 @@ def _install_permissions(
         return None
 
     if is_global:
-        if agent.config_global_dir:
-            config_dir = Path.home() / agent.config_global_dir.lstrip("~/")
-        else:
+        config_dir = agent.resolve_config_global_dir()
+        if config_dir is None:
             return None
         perm_path = config_dir / agent.permissions_file
     else:
@@ -783,9 +782,8 @@ def _remove_permissions(
         return None
 
     if is_global:
-        if agent.config_global_dir:
-            config_dir = Path.home() / agent.config_global_dir.lstrip("~/")
-        else:
+        config_dir = agent.resolve_config_global_dir()
+        if config_dir is None:
             return None
         perm_path = config_dir / agent.permissions_file
     else:
