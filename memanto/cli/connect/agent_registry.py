@@ -141,6 +141,24 @@ CLAUDE_CODE = AgentDef(
     permissions_payload={"permissions": {"allow": ["Bash(memanto:*)"]}},
 )
 
+KIMI_CODE = AgentDef(
+    name="kimi-code",
+    display_name="Kimi Code",
+    instruction_local_file="AGENTS.md",
+    instruction_global_file="~/.kimi-code/AGENTS.md",
+    instruction_format="markdown",
+    skill_local_dir=".kimi-code/skills",
+    skill_global_dir="~/.kimi-code/skills",
+    config_local_dir=".kimi-code",
+    config_global_dir="~/.kimi-code",
+    supports_hooks=True,
+    hook_config=AgentHookConfig(
+        settings_file="config.toml",
+        hook_key="hooks",
+        asset_file="kimi-hooks.toml",
+    ),
+)
+
 CODEX = AgentDef(
     name="codex",
     display_name="Codex CLI",
@@ -318,6 +336,7 @@ AGENT_REGISTRY: dict[str, AgentDef] = {
     a.name: a
     for a in [
         CLAUDE_CODE,
+        KIMI_CODE,
         CODEX,
         PI,
         CURSOR,
