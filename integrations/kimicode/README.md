@@ -8,7 +8,7 @@ The integration combines Kimi Code instructions, a memory skill, and lifecycle h
 
 - Python 3.10 or later.
 - Kimi Code.
-- A configured Memanto installation. Installing this package also installs `memanto>=0.2.21`.
+- A configured Memanto installation. Installing this package also installs `memanto>=0.2.22`.
 - `MOORCHEH_API_KEY` available in the environment that starts Kimi Code.
 
 Install the package:
